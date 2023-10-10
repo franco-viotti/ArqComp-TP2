@@ -1,4 +1,4 @@
-moduleuart_tx
+module uart_tx
   #(
         parameter   DBIT    =   8, //#data bits
                     SB_TICK =   16 //#ticks for stop bits
@@ -17,14 +17,14 @@ moduleuart_tx
         start = 2'b01,
         data  = 2'b10,
         stop  = 2'b11;
-    
+
     //signal declaration
     reg [1:0]   state_reg, state_next;
     reg [3:0]   s_reg,     s_next;
     reg [2:0]   n_reg,     n_next;
     reg [7:0]   b_reg,     b_next;
     reg         tx_reg,    tx_next;
-    
+
     //body
     //FSMD state & data registers
     always @(posedge clk,posedge reset)
