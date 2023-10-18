@@ -1,6 +1,6 @@
 module baud_rate_gen 
   #( 
-        parameter NB =   8,  // number of bits in counter 
+        parameter NB =   9,  // number of bits in counter 
         parameter  M = 163   // mod-M 
     )
     ( 
