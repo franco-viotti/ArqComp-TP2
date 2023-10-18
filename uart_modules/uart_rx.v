@@ -7,7 +7,7 @@ module uart_rx
         input   wire        clk, reset,
         input   wire        rx, s_tick,
         output  reg         rx_done_tick,
-        output  reg [7:0]   dout
+        output  wire [DBIT-1:0]   dout
     );
 
     //symbolic state declaration
@@ -96,6 +96,6 @@ module uart_rx
     end
 
     //output
-    assign dout =   b_reg;
+    assign dout = b_reg;
 
 endmodule

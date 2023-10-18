@@ -7,7 +7,7 @@ module baud_rate_gen
         input                clk,
         input              reset, 
         output          max_tick, 
-        output  [NB-1:O]       q 
+        output  [NB-1:0]       q 
     ); 
 
     //signal declaration 
@@ -27,6 +27,6 @@ module baud_rate_gen
     assign r_next = (r_reg==(M-1)) ? 0 : r_reg + 1; 
     // output logic 
     assign q = r_reg; 
-    assign max_tick = (r_reg==(M-1)) ? 1'b1 : 1'bO; 
+    assign max_tick = (r_reg==(M-1)) ? 1'b1 : 1'b0; 
 
 endmodule 

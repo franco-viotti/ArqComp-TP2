@@ -7,7 +7,7 @@ module uart
                 DVSR        = 163,  // baud rate divisor
                                     // DVSR = 50M/(16* baud rate)
                 DVSR_BITS   = 9,    // number of bits in divisor
-                FIFO_W      = 2,    // FIFO width
+                FIFO_W      = 2    // FIFO width
                                     // words in FIFO = 2^FIFO_W
     )            
     (
@@ -35,8 +35,7 @@ module uart
         .clk(clk), .reset(reset),
         .rx(rx), .s_tick(tick),
         .rx_done_tick(rx_done_tick),
-        .rx_data_out(rx_data_out),
-        .rx_empty(rx_empty)
+        .dout(rx_data_out)
     );
     fifo #(.W(FIFO_W), .B(DBIT)) rx_fifo_unit
     (
