@@ -15,7 +15,7 @@ module uart
         input wire rd_uart, wr_uart, rx,
         input wire [DBIT-1:0] w_data,
         output wire [DBIT-1:0] r_data,
-        output wire tx_full, rx_empty, tx
+        output wire tx_full, rx_empty, tx, tx_done_tick
     );
 
     //signal declaration
