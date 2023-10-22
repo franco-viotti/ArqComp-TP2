@@ -61,9 +61,9 @@ module interface_alu_uart
                 end
             op_code_s:
                 begin
-                    op_code_reg <= r_data_reg[NB_OP-1 : 0];
                     if(~rx_empty)
                         begin
+                            op_code_reg <= r_data_reg[NB_OP-1 : 0];
                             state_next <= data_a_s;
                             rd_uart_reg    <= 1'b1;
                         end
@@ -71,9 +71,9 @@ module interface_alu_uart
             data_a_s:
                 begin
                     rd_uart_reg <= 1'b0;
-                    data_a_reg <= r_data_reg[NB_AB-1 : 0];
                     if(~rx_empty)
                         begin
+                            data_a_reg <= r_data_reg[NB_AB-1 : 0];
                             state_next <= data_b_s;
                             rd_uart_reg    <= 1'b1;
                         end
@@ -81,9 +81,9 @@ module interface_alu_uart
             data_b_s: 
                 begin
                     rd_uart_reg    <= 1'b0;
-                    data_b_reg <= r_data_reg[NB_OP-1 : 0];
                     if(~rx_empty)
                         begin
+                            data_b_reg <= r_data_reg[NB_OP-1 : 0];
                             state_next <= send_result_s;
                             rd_uart_reg    <= 1'b1;
                         end
@@ -91,7 +91,7 @@ module interface_alu_uart
             send_result_s: 
                 begin
                     rd_uart_reg <= 1'b0;
-                    if(~tx_full)
+                    if(~tx_full && ~tx_done_tick)
                         begin
                             result_reg <= result;    
                             wr_uart_reg    <= 1'b1;
@@ -112,6 +112,6 @@ module interface_alu_uart
     assign w_data  = result_reg;
     assign rd_uart = rd_uart_reg;
     assign wr_uart = wr_uart_reg;
-
+    assign r_data_reg = r_data;
 
 endmodule
