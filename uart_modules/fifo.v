@@ -5,7 +5,9 @@ module fifo
     )
     (
         input   wire clk, reset,
-        input   wire rd , wr,
+        input   wire rd , wr,   //control signals: when wr is asserted, the input data is written into the FIFO
+                                //when rd is asserted, the output data is read from the FIFO
+                                //rd means 'remove first item (TAIL) of the FIFO'
         input   wire [B-1:0] w_data,
         output  wire empty, full,
         output  wire [B-1:0] r_data
@@ -13,6 +15,7 @@ module fifo
 
     //signal declaration
     reg [B-1: 0] array_reg   [2**W-1:0]; // register array
+    // La FIFO podrá almacenar hasta 2^W palabras de B bits
     reg [W-1: 0] w_ptr_reg,  w_ptr_next, w_ptr_succ;
     reg [W-1: 0] r_ptr_reg , r_ptr_next, r_ptr_succ;
     reg full_reg, empty_reg, full_next,  empty_next;
@@ -83,7 +86,7 @@ module fifo
                     end
             endcase
         end
-    
+
     // output
     assign empty = empty_reg;
     assign full  = full_reg;

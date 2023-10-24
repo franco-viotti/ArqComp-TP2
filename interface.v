@@ -1,8 +1,8 @@
 module interface_alu_uart
     #( //default settings
-    parameter DBIT = 8, // data bits
-    parameter NB_OP = 6,
-    parameter NB_AB = 8
+    parameter DBIT = 8,     // data bits
+    parameter NB_OP = 6,    // operation bits
+    parameter NB_AB = 8     // operand bits
 
     )
     (
@@ -78,7 +78,7 @@ module interface_alu_uart
                             rd_uart_reg    <= 1'b1;
                         end
                 end
-            data_b_s: 
+            data_b_s:
                 begin
                     rd_uart_reg    <= 1'b0;
                     if(~rx_empty)
@@ -88,12 +88,12 @@ module interface_alu_uart
                             rd_uart_reg    <= 1'b1;
                         end
                 end
-            send_result_s: 
+            send_result_s:
                 begin
                     rd_uart_reg <= 1'b0;
                     if(~tx_full && ~tx_done_tick)
                         begin
-                            result_reg <= result;    
+                            result_reg <= result;
                             wr_uart_reg    <= 1'b1;
                         end
                     if(tx_done_tick)
@@ -104,7 +104,7 @@ module interface_alu_uart
                 end
         endcase
 
-    end 
+    end
 
     assign op_code = op_code_reg;
     assign data_a  = data_a_reg;
