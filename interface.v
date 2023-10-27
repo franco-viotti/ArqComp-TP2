@@ -6,14 +6,14 @@ module interface_alu_uart
 
     )
     (
-        input wire clk, reset,
-        input wire [DBIT-1:0] r_data,
-        input wire tx_full, rx_empty, tx_done_tick,
-        input wire [NB_AB-1:0] result,
-        output wire [DBIT-1:0] w_data,
-        output wire rd_uart, wr_uart,
-        output wire [NB_OP-1:0] op_code,
-        output wire [NB_AB-1:0] data_a, data_b
+        input  clk, reset,
+        input  [DBIT-1:0] r_data,
+        input  tx_full, rx_empty, tx_done_tick,
+        input  [NB_AB-1:0] result,
+        output [DBIT-1:0] w_data,
+        output rd_uart, wr_uart,
+        output [NB_OP-1:0] op_code,
+        output [NB_AB-1:0] data_a, data_b
     );
 
     localparam [2:0]
@@ -24,11 +24,10 @@ module interface_alu_uart
         send_result_s = 3'b100;
 
     //signal declaration
-    reg [1:0] state_reg, state_next;
+    reg [2:0] state_reg, state_next;
     reg [NB_OP-1:0] op_code_reg;
     reg [NB_AB-1:0] data_a_reg, data_b_reg;
     reg [NB_AB-1:0] result_reg;
-    reg [DBIT -1:0] r_data_reg;
     reg rd_uart_reg, wr_uart_reg;
 
     always @(posedge clk, posedge reset) begin
@@ -49,6 +48,7 @@ module interface_alu_uart
             data_a_reg <= 0;
             data_b_reg <= 0;
             op_code_reg <= 0;
+            state_next <= waiting_s;
         end
 
         case (state_reg)
@@ -63,7 +63,7 @@ module interface_alu_uart
                 begin
                     if(~rx_empty)
                         begin
-                            op_code_reg <= r_data_reg[NB_OP-1 : 0];
+                            op_code_reg <= r_data[NB_OP-1 : 0];
                             state_next <= data_a_s;
                             rd_uart_reg    <= 1'b1;
                         end
@@ -73,7 +73,7 @@ module interface_alu_uart
                     rd_uart_reg <= 1'b0;
                     if(~rx_empty)
                         begin
-                            data_a_reg <= r_data_reg[NB_AB-1 : 0];
+                            data_a_reg <= r_data[NB_AB-1 : 0];
                             state_next <= data_b_s;
                             rd_uart_reg    <= 1'b1;
                         end
@@ -83,7 +83,7 @@ module interface_alu_uart
                     rd_uart_reg    <= 1'b0;
                     if(~rx_empty)
                         begin
-                            data_b_reg <= r_data_reg[NB_OP-1 : 0];
+                            data_b_reg <= r_data[NB_OP-1 : 0];
                             state_next <= send_result_s;
                             rd_uart_reg    <= 1'b1;
                         end
@@ -112,6 +112,5 @@ module interface_alu_uart
     assign w_data  = result_reg;
     assign rd_uart = rd_uart_reg;
     assign wr_uart = wr_uart_reg;
-    assign r_data_reg = r_data;
 
 endmodule
