@@ -20,9 +20,26 @@ module tb_alu_interface;
 
         #3  i_reset      = 1'b1;
         #3  i_reset      = 1'b0;
-        #3  r_data_reg   = 8'b11111111;
+        
+        //load opcode
+        #3  r_data_reg   = 8'b00100000;
         #1  rx_empty_reg = 0;
-
+        while (wire_rd_uart != 1) begin
+            #1;
+        end
+        
+        //load data_a
+        #3 r_data_reg    = 8'b00000001;
+        while (wire_rd_uart != 1) begin
+            #1;
+        end 
+        
+        //load data_b
+         #3 r_data_reg    = 8'b00000010;
+        while (wire_rd_uart != 1) begin
+            #1;
+        end 
+            
         #10 $finish;
 
     end
