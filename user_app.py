@@ -14,7 +14,8 @@ if len(sys.argv) < 2 or not sys.argv[1].isdigit():
     raise ValueError("El número de puerto serial es inválido.")
 
 port_number = sys.argv[1]
-PORT = f'/dev/ttyUSB{int(port_number)}'
+#PORT = f'/dev/ttyUSB{int(port_number)}'
+PORT = f'COM{int(port_number)}'
 
 # Configurar el puerto serial
 # Si se le pasa el puerto (port!=None), se abre el puerto serial
@@ -37,7 +38,7 @@ def send_data(data):
     Returns:
     None
     """
-    serial_port.write(int(data).to_bytes(1, 'big'))
+    serial_port.write(int(data).to_bytes(1, "big"))
 
 def read_data(size):
     """
@@ -47,9 +48,9 @@ def read_data(size):
     size (int): Cantidad de bytes a leer de la FPGA
 
     Returns:
-    bytes: Datos recibidos de la FPGA
+    str: Datos recibidos de la FPGA decodificados con utf-8
     """
-    return serial_port.read_until(size)
+    return serial_port.read_until(size).decode('utf-8')
 
 def code_to_bin(code):
     """
@@ -99,13 +100,18 @@ try:
                           entero representable con 8 bits signados.")
 
     # Enviar cada dato a la FPGA
-    serial_port.send_data(op_code)
-    serial_port.send_data(data_a)
-    serial_port.send_data(data_b)
+    send_data(op_code)
+    print(f'Enviando código de operación: {int(op_code).to_bytes(1, "big")}')
+    print(f'Opcode sin formateo: {op_code}')
+    print(f'Opcode formateado en bytes: {op_code.to_bytes(1, "big")}')
+    send_data(data_a)
+    print(f'Enviando primer operando: {int(data_a).to_bytes(1, "big")}')
+    send_data(data_b)
+    print(f'Enviando segundo operando: {int(data_b).to_bytes(1, "big")}')
 
     # Leer el resultado de la FPGA
-    result = serial_port.read_data(1)
-    print(f"The result of {data_a} {op_code} {data_b} is: {result}")
+    result = read_data('1')
+    print(f"El resultado de {data_a} {op_code} {data_b} es: {result}")
 
 except ValueError as ve:
     print(ve)
