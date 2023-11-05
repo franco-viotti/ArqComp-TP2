@@ -1,79 +1,158 @@
+"""
+Programa para comunicarse con una FPGA a traves de un puerto serial.
+"""
+
+import sys
+import time
+import signal
 import serial
+import serial.tools.list_ports
 
-# Configurar el puerto serial
-# Si se le pasa el puerto (port!=None), se abre el puerto serial
-serial_port = serial.Serial(
-                                port="/dev/ttyUSB0",
-                                baudrate=19200,
-                                bytesize=8,
-                                parity="PARITY_NONE",
-                                stopbits="STOPBITS_ONE")  # Reemplazar '/dev/ttyUSB0' con el puerto serial apropiado
 
-# Función para enviar un dato a la FPGA
-def send_data(data):
-    serial_port.write(data)
+# Obtener una lista de todos los puertos seriales disponibles
+ports = list(serial.tools.list_ports.comports())
 
-# Función para recibir datos de la FPGA
-def read_data(size):
-    return serial_port.read_until(size)
+# Guardar el puerto en una variable
+if ports:
+    port = ports[0].device
+else:
+    print("No se encontro ningun puerto serial disponible.")
+    sys.exit(1)
 
-# Función que transforma en binario el código de operación
-def code_to_bin(op_code):
-    return {
-        'ADD': "100000",
-        'SUB': "100010",
-        'AND': "100100",
-        'OR': "100101",
-        'XOR': "100110",
-        'SRA': "000011",
-        'SRL': "000010",
-        'NOR': "100111"
-    }.get(op_code, None)
+serial_port = serial.Serial(port=port,
+                            baudrate=19200,
+                            parity=serial.PARITY_NONE,
+                            stopbits=serial.STOPBITS_ONE,
+                            bytesize=serial.EIGHTBITS,
+                            timeout=0)
 
-# Función que transforma en binario un operando
-def int_to_bin8(operand):
-    if operand < -128 or operand > 127:
-        raise ValueError("El operando debe estar en el rango de -128 a 127 para ser representado con 8 bits signados.")
-    if operand >= 0:
-        return bin(operand)[2:].zfill(8)
-    else:
-        return bin(256 + operand)[2:]
+def sigint_handler(signal, frame):
+    """
+    Funcion que maneja la señal SIGINT.
 
-try:
-    # Pedir datos al usuario
-    valid_ops = ["ADD", "SUB", "AND", "OR", "XOR", "SRA", "SRL", "NOR"]
-    op_code = input("Ingrese el código de operación: ")
+    Parameters:
+    signal: Señal recibida.
+    frame: Frame actual.
 
-    # Verificar si el código de operación es válido y transformar en binario
-    if op_code not in valid_ops:
-        raise ValueError("Operación inválida. Las operaciones válidas son ADD, SUB, AND, OR, XOR, SRA, SRL, NOR. Intente de nuevo.")
+    Returns:
+    None
+    """
+    print("\nSeñal SIGINT recibida. Cerrando el programa.")
+    if 'serial_port' in globals():
+        serial_port.close()
+    sys.exit(0)
+
+# Configurar el manejo de la señal SIGINT
+signal.signal(signal.SIGINT, sigint_handler)
+
+def code_to_bin(code):
+    """
+    Funcion que transforma el codigo de operacion en codigo binario
+
+    Parameters:
+    code (str): Codigo de operacion a transformar en binario
+
+    Returns:
+    str: Codigo de operacion en binario
+    """
+    op_codes = {
+        "ADD": 0b100000,
+        "SUB": 0b100010,
+        "AND": 0b100100,
+        "OR":  0b100101,
+        "XOR": 0b100110,
+        "SRA": 0b000011,
+        "SRL": 0b000010,
+        "NOR": 0b100111
+    }
+    return op_codes.get(code, "100000")
+
+def write_to_fpga(data_to_send):
+    """
+	Funcion que escribe un string en la FPGA.
+
+	Parameters:
+	data (str): String a escribir en la FPGA.
+
+	Returns:
+	None
+	"""
+    data_to_send = int(data_to_send).to_bytes(1, 'big')
+    serial_port.write(data_to_send)
+    time.sleep(0.05)
+
+def read_from_fpga():
+    """
+	Funcion que lee un byte de la FPGA.
+
+	Parameters:
+	None
+
+	Returns:
+	int: Byte leido desde la FPGA.
+	"""
+    return int.from_bytes(serial_port.read(), byteorder='big')
+
+def check_valid_opcode(op_code):
+    """
+    Verifica si el codigo de operacion ingresado es valido.
+
+    Parameters:
+    op_code (str): Cdigo de operacion a verificar.
+
+    Returns:
+    None
+    """
+    valid_op_codes = ["ADD", "SUB", "AND", "OR", "XOR", "SRA", "SRL", "NOR"]
+    if op_code not in valid_op_codes:
+        print("El codigo de operacion ingresado no es valido.")
+        sys.exit(1)
+
+def check_valid_operand(operand):
+    """
+    Verifica si el operando ingresado es válido.
+
+    Parameters:
+    operand (str): Operando a verificar.
+
+    Returns:
+    bool: True si el operando es válido, False en caso contrario.
+    """
+    try:
+        value = int(operand)
+        if -128 <= value <= 127:
+            return True
+        else:
+            print("El operando ingresado no es representable en 8 bits. Intente nuevamente.")
+            sys.exit(1)
+    except (ValueError, OverflowError):
+        print("El operando ingresado no es valido o es muy grande. Intente nuevamente.")
+        sys.exit(1)
+
+
+while True:
+    # Ingreso de codigo de operacion
+    op_code = input("Ingrese un codigo de operacion entre los siguientes:\
+ ADD, SUB, AND, OR, XOR, SRA, SRL, NOR: \n\
+>> ")
+    op_code = op_code.upper()
+    check_valid_opcode(op_code)
     op_code = code_to_bin(op_code)
+    write_to_fpga(op_code) # Enviando el codigo de operacion al arduino
 
-    # Solicitar y verificar los operandos
-    data_a = int(input("Ingrese el primer operando: "))
-    if data_a < -128 or data_a > 127:
-        raise ValueError("El primer operando debe ser un número entero representable con 8 bits signados.")
-    data_a = int_to_bin8(data_a)
+	# Ingreso de operando A
+    data_a = input("Ingrese el operando A:\n>> ")
+    print(f"El operando A es {data_a}")
+    check_valid_operand(data_a)
+    write_to_fpga(data_a) # Enviando el operando A al arduino
 
-    data_b = int(input("Ingrese el segundo operando: "))
-    if data_b < -128 or data_b > 127:
-        raise ValueError("El segundo operando debe ser un número entero representable con 8 bits signados.")
-    data_b = int_to_bin8(data_b)
+	# Ingreso de operando B
+    data_b = input("Ingrese el operando B:\n>> ")
+    print(f"El operando B es {data_b}")
+    check_valid_operand(data_b)
+    write_to_fpga(data_b) # Enviando el operando B al arduino
 
-    # Enviar cada dato a la FPGA
-    serial_port.send_data(op_code)
-    serial_port.send_data(data_a)
-    serial_port.send_data(data_b)
-
-    # Leer la respuesta de la FPGA
-    result = serial_port.read_data(8)  # Lee 8 bits de datos de la FPGA
-    print('Datos recibidos de la FPGA:', result)
-
-except ValueError as ve:
-    print(ve)
-
-except serial.SerialException as e:
-    print('Error al abrir el puerto serial:', e)
-
-finally:
-    serial_port.close()
+    # Lectura de respuesta del arduino
+    data = read_from_fpga()
+    print(f"Resultado:\n>> {data}")
+    print("==================================")
