@@ -1,8 +1,0 @@
-INFO: [VRFC 10-2263] Analyzing Verilog file "/home/fausto/ArqComp-TP2/ALU.v" into library xil_defaultlib
-INFO: [VRFC 10-311] analyzing module ALU
-INFO: [VRFC 10-2263] Analyzing Verilog file "/home/fausto/ArqComp-TP2/interface.v" into library xil_defaultlib
-INFO: [VRFC 10-311] analyzing module interface_alu_uart
-INFO: [VRFC 10-2263] Analyzing Verilog file "/home/fausto/ArqComp-TP2/tops/top_alu_interface.v" into library xil_defaultlib
-INFO: [VRFC 10-311] analyzing module top_alu_interface
-INFO: [VRFC 10-2263] Analyzing Verilog file "/home/fausto/ArqComp-TP2/test_benchs/tb_alu_interface.v" into library xil_defaultlib
-INFO: [VRFC 10-311] analyzing module tb_alu_interface
