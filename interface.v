@@ -8,7 +8,7 @@ module interface_alu_uart
     (
         input  clk, reset,
         input  [DBIT-1:0] r_data,
-        input  tx_full, rx_empty, tx_done_tick,
+        input  rx_empty, tx_done_tick,
         input  [NB_AB-1:0] result,
         output [DBIT-1:0] w_data,
         output rd_uart, wr_uart,
@@ -29,6 +29,7 @@ module interface_alu_uart
     reg [NB_AB-1:0] data_a_reg, data_b_reg;
     reg [NB_AB-1:0] result_reg;
     reg rd_uart_reg, wr_uart_reg;
+    reg tx_empty;
 
     always @(posedge clk, posedge reset) begin
         if(reset)
@@ -42,7 +43,8 @@ module interface_alu_uart
     end
 
     always @(posedge clk) begin
-        if (reset) begin
+        if (reset) begin    // Que pasa si se quiere resetear y cuando se evalua el
+                            //if el reset esta en cero porque se solto el boton?
             rd_uart_reg <= 1'b0;
             wr_uart_reg <= 1'b0;
             data_a_reg <= 0;
@@ -86,16 +88,21 @@ module interface_alu_uart
                             data_b_reg <= r_data[NB_OP-1 : 0];
                             state_next <= send_result_s;
                             rd_uart_reg    <= 1'b1;
+                            tx_empty <= 1'b1;
                         end
                 end
             send_result_s:
                 begin
                     rd_uart_reg <= 1'b0;
-                    if(~tx_full && ~tx_done_tick)
+                    if(tx_empty)
                         begin
                             result_reg <= result;
                             wr_uart_reg    <= 1'b1;
+                            tx_empty <= 1'b0;
                         end
+                    else begin
+                        wr_uart_reg <= 1'b0;
+                    end
                     if(tx_done_tick)
                         begin
                             state_next <= waiting_s;
